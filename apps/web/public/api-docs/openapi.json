@@ -1,0 +1,138 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1": {
+      "get": {
+        "operationId": "AppController_getHello_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/api/v1/movies/popular": {
+      "get": {
+        "operationId": "MoviesController_popular_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Results page (1..n)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Popular movies page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MoviePageDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Popular movies",
+        "tags": [
+          "movies"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Nextflix API",
+    "description": "API documentation for Nextflix prototype",
+    "version": "1",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Local (no version)"
+    },
+    {
+      "url": "http://localhost:3000/api/1",
+      "description": "Local v1"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "MovieSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 634492
+          },
+          "title": {
+            "type": "string",
+            "example": "Mad Max: Fury Road"
+          },
+          "overview": {
+            "type": "string",
+            "example": "In a post-apocalyptic wasteland..."
+          },
+          "posterPath": {
+            "type": "string",
+            "example": "/abc123.jpg"
+          },
+          "releaseDate": {
+            "type": "string",
+            "example": "2015-05-15",
+            "format": "date"
+          },
+          "voteAverage": {
+            "type": "number",
+            "example": 7.8,
+            "format": "float"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "posterPath",
+          "releaseDate",
+          "voteAverage"
+        ]
+      },
+      "MoviePageDto": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MovieSummaryDto"
+            }
+          }
+        },
+        "required": [
+          "page",
+          "items"
+        ]
+      }
+    }
+  }
+}
