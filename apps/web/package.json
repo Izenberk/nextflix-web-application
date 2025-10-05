@@ -1,5 +1,5 @@
 {
-  "name": "web",
+  "name": "@nextflix/web",
   "version": "0.1.0",
   "type": "module",
   "private": true,
@@ -11,9 +11,11 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.2",
     "next": "^15.5.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
