@@ -1,13 +1,13 @@
 import type { MovieSummary } from './movie.entity';
 
-export interface GetPopularMoviesPort {
+export interface GetUpcomingMoviesPort {
   fetch(
     page?: number,
     opts?: { language?: string; region?: string },
   ): Promise<MovieSummary[]>;
 }
-export class GetPopularMovies {
-  constructor(private readonly port: GetPopularMoviesPort) {}
+export class GetUpcomingMovies {
+  constructor(private readonly port: GetUpcomingMoviesPort) {}
   execute(page = 1, opts?: { language?: string; region?: string }) {
     return this.port.fetch(page, opts);
   }
