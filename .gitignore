@@ -40,3 +40,6 @@ yarn-error.log*
 # env
 .env*
 
+
+# generated
+apps/web/public/api-docs/openapi.json

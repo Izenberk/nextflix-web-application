@@ -1,6 +1,12 @@
 {
   "extends": "@repo/typescript-config/nextjs.json",
   "compilerOptions": {
+    "jsx": "preserve",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "es2022"],
+
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
@@ -9,7 +15,12 @@
       "@/presentation/*": ["./presentation/*"],
       "@/store/*": ["./store/*"]
     },
-    "plugins": [{ "name": "next" }]
+
+    "plugins": [{ "name": "next" }],
+    "skipLibCheck": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "types": ["@types/node"]
   },
   "include": [
     "app/**/*.ts",

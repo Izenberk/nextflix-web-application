@@ -7,7 +7,25 @@ export class MovieSummaryDto {
   @ApiPropertyOptional({ example: 'In a post-apocalyptic wasteland...' })
   overview?: string;
 
-  @ApiProperty({ example: '/abc123.jpg' }) posterPath!: string;
-  @ApiProperty({ example: '2015-05-15', format: 'date' }) releaseDate!: string;
-  @ApiProperty({ example: 7.8, format: 'float' }) voteAverage!: number;
+  @ApiPropertyOptional({
+    example: 'https://image.tmdb.org/t/p/w342/abc.jpg',
+    nullable: true,
+  })
+  posterUrl?: string | null;
+
+  @ApiPropertyOptional({
+    example: 'https://image.tmdb.org/t/p/w780/def.jpg',
+    nullable: true,
+  })
+  backdropUrl?: string | null;
+
+  @ApiPropertyOptional({
+    example: '2015-05-15',
+    format: 'date',
+    nullable: true,
+  })
+  releaseDate?: string | null;
+
+  @ApiProperty({ example: 7.8, format: 'float', minimum: 0, maximum: 10 })
+  voteAverage!: number;
 }

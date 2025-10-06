@@ -33,17 +33,14 @@ async function bootstrap() {
     .setTitle('Nextflix API')
     .setDescription('API documentation for Nextflix prototype')
     .setVersion(apiVersion)
-    // Let tools know both base URLs:
-    .addServer(`http://localhost:${port}/${globalPrefix}`, 'Local (no version)')
-    .addServer(
-      `http://localhost:${port}/${globalPrefix}/${apiVersion}`,
-      'Local v1',
-    )
+    .addServer('/', 'Local') // root base
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' })
     .build();
 
-  const doc = SwaggerModule.createDocument(app, openapi);
-  SwaggerModule.setup('/docs', app, doc);
+  const doc = SwaggerModule.createDocument(app, openapi, {
+    ignoreGlobalPrefix: false,
+  });
+  SwaggerModule.setup('docs', app, doc);
 
   // Emit openapi.json to Next.js **public/**
   const outPath = join(process.cwd(), '../web/public/api-docs/openapi.json');

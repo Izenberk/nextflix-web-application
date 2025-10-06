@@ -1,33 +1,13 @@
-'use client';
+import Providers from './providers'
+import { PopularRow } from '@/presentation/sections/Rows'
 
-import Row from '@/presentation/components/Row';
-import { RowSkeleton } from '@/presentation/components/RowSkeleton';
-import { usePopularMovies } from '@/presentation/hooks/useMovies';
-
-export default function HomePage() {
-  const { isLoading, isError, error, isEmpty, isSuccess, data } = usePopularMovies(1);
-
+export default function Page() {
   return (
-    <main className="px-6 py-6 space-y-8">
-      <header className="text-2xl font-bold">Nextflix</header>
-
-      {isLoading && <RowSkeleton />}
-
-      {isError && (
-        <div className="rounded border border-red-500/30 bg-red-500/10 p-4">
-          <p className="font-medium">Failed to load popular movies.</p>
-          <p className="text-sm opacity-80">{error?.message}</p>
-        </div>
-      )}
-
-      {isSuccess && isEmpty && (
-        <div className="rounded border border-yellow-500/30 bg-yellow-500/10 p-4">
-          <p className="font-medium">No movies available.</p>
-          <p className="text-sm opacity-80">Try again later.</p>
-        </div>
-      )}
-
-      {isSuccess && !isEmpty && <Row title="Popular on Nextflix" items={data!.items} />}
-    </main>
-  );
+    <Providers>
+      <main className="space-y-8 mt-6">
+        <PopularRow />
+      </main>
+      <footer className="py-10 text-center text-sm text-white/50">© Nextflix</footer>
+    </Providers>
+  )
 }
