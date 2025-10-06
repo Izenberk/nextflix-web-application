@@ -1,3 +1,4 @@
+// apps/api/src/movies/dto/movie-summary-dto.ts
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class MovieSummaryDto {

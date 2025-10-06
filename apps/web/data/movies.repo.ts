@@ -1,37 +1,15 @@
-import type { MovieSummary } from '@/domain/movies'
 import { apiGet } from './api'
-import { normalizeMoviesResponse } from '@/domain/movies' // from the domain helper we defined earlier
+import type { MovieSummary } from '@/domain/movies'
+export type Paged<T> = { page: number; items: T[] }
+type PageResp = { page?: number; items?: MovieSummary[] }
 
-type PageResp = { page?: number; results?: unknown; items?: unknown }
+const toPage = (data: PageResp, fallbackPage: number): Paged<MovieSummary> => ({
+  page: typeof data.page === 'number' ? data.page : fallbackPage,
+  items: Array.isArray(data.items) ? data.items : [],
+})
 
-type Paged<T> = { page: number; items: T[] }
-
-function toPage<T>(data: PageResp | unknown, fallbackPage: number, items: T[]): Paged<T> {
-  const p = (data as PageResp)?.page
-  const page = typeof p === 'number' ? p : fallbackPage
-  return { page, items }
-}
-
-export async function fetchPopular(page = 1): Promise<{ page: number; items: MovieSummary[] }> {
-  const data = await apiGet<PageResp>('/movies/popular', { query: { page } })
-  const items = normalizeMoviesResponse(data)
-  return toPage<MovieSummary>(data, page, items)
-}
-
-export async function fetchTrending(page = 1): Promise<{ page: number; items: MovieSummary[] }> {
-  const data = await apiGet<PageResp>('/movies/trending', { query: { page } })
-  const items = normalizeMoviesResponse(data)
-  return toPage<MovieSummary>(data, page, items)
-}
-
-export async function fetchTopRated(page = 1): Promise<{ page: number; items: MovieSummary[] }> {
-  const data = await apiGet<PageResp>('/movies/top-rated', { query: { page } })
-  const items = normalizeMoviesResponse(data)
-  return toPage<MovieSummary>(data, page, items)
-}
-
-export async function fetchNowPlaying(page = 1): Promise<{ page: number; items: MovieSummary[] }> {
-  const data = await apiGet<PageResp>('/movies/now-playing', { query: { page } })
-  const items = normalizeMoviesResponse(data)
-  return toPage<MovieSummary>(data, page, items)
-}
+export const fetchPopular     = (page=1) => apiGet<PageResp>('/movies/popular',     { query:{page} }).then(d=>toPage(d,page))
+export const fetchTopRated    = (page=1) => apiGet<PageResp>('/movies/top-rated',   { query:{page} }).then(d=>toPage(d,page))
+export const fetchNowPlaying  = (page=1) => apiGet<PageResp>('/movies/now-playing', { query:{page} }).then(d=>toPage(d,page))
+export const fetchTrending    = (page=1, window:'day'|'week'='day') =>
+  apiGet<PageResp>('/movies/trending', { query:{page, window} }).then(d=>toPage(d,page))
