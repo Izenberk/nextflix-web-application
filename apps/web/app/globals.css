@@ -139,6 +139,20 @@ html, body { background:#141414; color:#fff; min-height:100%; }
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.motion-smooth {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
 /* Base layer hookups */
 @layer base {
   * { @apply border-border outline-ring/50; }

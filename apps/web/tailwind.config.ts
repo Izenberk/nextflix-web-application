@@ -2,6 +2,7 @@ import type { Config } from 'tailwindcss'
 import typography from '@tailwindcss/typography'
 import aspectRatio from '@tailwindcss/aspect-ratio'
 import containerQueries from '@tailwindcss/container-queries'
+import scrollbarHide from 'tailwind-scrollbar-hide'
 
 const config: Config = {
   darkMode: 'class',
@@ -29,7 +30,12 @@ const config: Config = {
       },
     },
   },
-  plugins: [typography, aspectRatio, containerQueries],
+  plugins: [
+    typography,
+    aspectRatio,
+    containerQueries,
+    scrollbarHide,
+  ],
 }
 
 export default config

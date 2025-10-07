@@ -1,16 +1,17 @@
-'use client';
+import type { Metadata } from 'next'
+import './globals.css'
 
-import './globals.css';
-import { useState } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+export const metadata: Metadata = {
+  title: 'Nextflix',
+  description: 'Watch anything, anywhere — built by Korn.',
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const [qc] = useState(() => new QueryClient());
   return (
-    <html lang="en">
-      <body className="bg-black text-white">
-        <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-[#141414] text-white font-sans antialiased overflow-x-hidden">
+        {children}
       </body>
     </html>
-  );
+  )
 }
