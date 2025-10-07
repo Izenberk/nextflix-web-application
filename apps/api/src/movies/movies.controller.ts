@@ -1,12 +1,14 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Param, ParseIntPipe } from '@nestjs/common';
 import {
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
   ApiTags,
+  ApiParam,
 } from '@nestjs/swagger';
 import { MoviesService } from './movies.service';
 import { MoviePageDto } from './dto/movie-page.dto';
+import { MovieVideosDto } from './dto/movie-video.dto';
 
 function coercePage(p?: string) {
   return Math.max(1, Number(p) || 1);
@@ -134,5 +136,42 @@ export class MoviesController {
     const r = coerceRegion(region);
     const items = await this.svc.getNowPlaying(p, { language, region: r });
     return { page: p, items };
+  }
+
+  @Get(':id/videos')
+  @ApiOperation({ summary: 'Videos for a movie (trailers/teasers)' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiQuery({
+    name: 'language',
+    required: false,
+    schema: { type: 'string', default: 'en-US' },
+  })
+  @ApiQuery({
+    name: 'includeVideoLanguage',
+    required: false,
+    schema: { type: 'string', example: 'en,null' },
+    description: 'CSV of fallback languages for videos',
+  })
+  @ApiOkResponse({ description: 'Videos list', type: MovieVideosDto })
+  async videos(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('language') language?: string,
+    @Query('includeVideoLanguage') includeVideoLanguage?: string,
+  ): Promise<MovieVideosDto> {
+    const results = await this.svc.getVideos(id, {
+      language,
+      includeVideoLanguage,
+    });
+    // return minimal fields useful to FE
+    return {
+      results: results.map((v) => ({
+        name: v.name,
+        site: v.site as any,
+        key: v.key,
+        type: v.type,
+        official: v.official,
+        published_at: v.published_at,
+      })),
+    };
   }
 }
