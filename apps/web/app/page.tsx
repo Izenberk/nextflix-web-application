@@ -28,12 +28,12 @@ export default function Page() {
 
         {/* ROWS */}
         <section className="relative z-10 md:-mt-10 lg:-mt-16 xl:-mt-20 space-y-10 md:space-y-12 px-2 sm:px-4 md:px-6 lg:px-8">
-          <Suspense fallback={<NowPlayingRowSkeleton />}>
-            <NowPlayingRow />
-          </Suspense>
-
           <Suspense fallback={<PopularRowSkeleton />}>
             <PopularRow />
+          </Suspense>
+
+          <Suspense fallback={<NowPlayingRowSkeleton />}>
+            <NowPlayingRow />
           </Suspense>
 
           <Suspense fallback={<TopRatedRowSkeleton />}>
