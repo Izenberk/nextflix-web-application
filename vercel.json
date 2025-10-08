@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "installCommand": "pnpm -w install",
-  "buildCommand": "pnpm -w --filter @nextflix/web... build",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm dlx turbo run build --filter=@nextflix/web",
   "outputDirectory": "apps/web/.next"
 }
