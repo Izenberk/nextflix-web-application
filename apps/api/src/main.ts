@@ -24,8 +24,8 @@ async function setupAppCommon(app: import('@nestjs/common').INestApplication) {
   // CORS (dev + Vercel)
   app.enableCors({
     origin: [
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
+      'http://localhost:3001',
+      'http://127.0.0.1:3001',
       /.*\.vercel\.app$/,
     ],
     credentials: true,
