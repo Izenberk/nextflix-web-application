@@ -1,42 +1,75 @@
+// apps/web/data/movies.hooks.ts
 'use client'
+
 import { useQuery } from '@tanstack/react-query'
+import type { MovieSummary } from '@/domain/movies'
 import {
   fetchPopular,
   fetchTopRated,
   fetchNowPlaying,
-  fetchTrending,
+  fetchUpcoming,
   getMovieVideos,
   type Paged,
   type MovieVideo,
 } from './movies.repo'
-import type { MovieSummary } from '@/domain/movies'
 
+/** Shared query options */
 const base = { suspense: true, useErrorBoundary: true, staleTime: 60_000 as const }
 
-export const usePopularMovies    = (page=1) => useQuery<Paged<MovieSummary>>({ queryKey:['movies','popular',page],     queryFn:()=>fetchPopular(page),     ...base })
-export const useTopRatedMovies   = (page=1) => useQuery<Paged<MovieSummary>>({ queryKey:['movies','top-rated',page],   queryFn:()=>fetchTopRated(page),    ...base })
-export const useNowPlayingMovies = (page=1) => useQuery<Paged<MovieSummary>>({ queryKey:['movies','now-playing',page], queryFn:()=>fetchNowPlaying(page),  ...base })
+/** Popular */
+export const usePopularMovies = (page = 1) =>
+  useQuery<Paged<MovieSummary>>({
+    queryKey: ['movies', 'popular', page],
+    queryFn: () => fetchPopular(page),
+    ...base,
+  })
 
-// WARNING: Only enable this if your API supports /movies/trending
-export const useTrendingMovies   = (page=1, window:'day'|'week'='day') =>
-  useQuery<Paged<MovieSummary>>({ queryKey:['movies','trending',page,window], queryFn:()=>fetchTrending(page, window), ...base })
+/** Top Rated */
+export const useTopRatedMovies = (page = 1) =>
+  useQuery<Paged<MovieSummary>>({
+    queryKey: ['movies', 'top-rated', page],
+    queryFn: () => fetchTopRated(page),
+    ...base,
+  })
 
-// --- Hero trailer ---
+/** Now Playing */
+export const useNowPlayingMovies = (page = 1) =>
+  useQuery<Paged<MovieSummary>>({
+    queryKey: ['movies', 'now-playing', page],
+    queryFn: () => fetchNowPlaying(page),
+    ...base,
+  })
+
+/** Upcoming */
+export const useUpcomingMovies = (page = 1) =>
+  useQuery<Paged<MovieSummary>>({
+    queryKey: ['movies', 'upcoming', page],
+    queryFn: () => fetchUpcoming(page),
+    ...base,
+  })
+
+
+/** Hero trailer (best-effort YouTube pick with graceful fallback) */
 export const useMovieTrailer = (movieId?: number) =>
   useQuery<MovieVideo | null>({
-    queryKey: ['movies','videos','trailer', movieId],
+    queryKey: ['movies', 'videos', 'trailer', movieId],
     enabled: !!movieId,
     queryFn: async () => {
       if (!movieId) return null
-      const list = await getMovieVideos(movieId, { language: 'en-US', includeVideoLanguage: 'en,null' })
+      const list = await getMovieVideos(movieId, {
+        language: 'en-US',
+        includeVideoLanguage: 'en,null',
+      })
       if (!list.length) return null
       return (
         list.find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official) ??
         list.find(v => v.site === 'YouTube' && v.type === 'Trailer') ??
         list.find(v => v.site === 'YouTube' && v.type === 'Teaser') ??
-        list.find(v => v.site === 'YouTube') ?? // clip/featurette/etc.
+        list.find(v => v.site === 'YouTube') ??
         null
       )
     },
-    suspense: true, useErrorBoundary: true, staleTime: 60_000,
+    suspense: true,
+    useErrorBoundary: true,
+    staleTime: 60_000,
   })

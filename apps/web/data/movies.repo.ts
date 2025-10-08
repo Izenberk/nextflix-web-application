@@ -1,3 +1,4 @@
+// apps/web/data/movies.repo.ts
 import { apiGet } from './api'
 import type { MovieSummary } from '@/domain/movies'
 
@@ -9,14 +10,10 @@ const toPage = (data: PageResp, fallbackPage: number): Paged<MovieSummary> => ({
   items: Array.isArray(data.items) ? data.items : [],
 })
 
-export const fetchPopular     = (page=1) => apiGet<PageResp>('/movies/popular',     { query:{page} }).then(d=>toPage(d,page))
-export const fetchTopRated    = (page=1) => apiGet<PageResp>('/movies/top-rated',   { query:{page} }).then(d=>toPage(d,page))
-export const fetchNowPlaying  = (page=1) => apiGet<PageResp>('/movies/now-playing', { query:{page} }).then(d=>toPage(d,page))
-
-// NOTE: Your backend doesn't implement /movies/trending yet. This will 404.
-// Either add the endpoint or remove this function (and its hook) for now.
-export const fetchTrending    = (page=1, window:'day'|'week'='day') =>
-  apiGet<PageResp>('/movies/trending', { query:{page, window} }).then(d=>toPage(d,page))
+export const fetchPopular     = (page = 1) => apiGet<PageResp>('/movies/popular',     { query: { page } }).then(d => toPage(d, page))
+export const fetchTopRated    = (page = 1) => apiGet<PageResp>('/movies/top-rated',   { query: { page } }).then(d => toPage(d, page))
+export const fetchNowPlaying  = (page = 1) => apiGet<PageResp>('/movies/now-playing', { query: { page } }).then(d => toPage(d, page))
+export const fetchUpcoming    = (page = 1) => apiGet<PageResp>('/movies/upcoming',    { query: { page } }).then(d => toPage(d, page))
 
 // --- Videos for hero ---
 export type MovieVideo = {
@@ -28,12 +25,15 @@ export type MovieVideo = {
   published_at?: string
 }
 
-export const getMovieVideos = async (id: number, opts?: { language?: string; includeVideoLanguage?: string }) => {
+export const getMovieVideos = async (
+  id: number,
+  opts?: { language?: string; includeVideoLanguage?: string }
+) => {
   const res = await apiGet<{ results?: MovieVideo[] }>(`/movies/${id}/videos`, {
     query: {
       ...(opts?.language ? { language: opts.language } : {}),
       ...(opts?.includeVideoLanguage ? { includeVideoLanguage: opts.includeVideoLanguage } : {}),
-    }
+    },
   })
   const list = Array.isArray(res?.results) ? res.results : []
   if (process.env.NODE_ENV !== 'production') {
@@ -71,5 +71,3 @@ export async function getMovieById(id: string | number): Promise<MovieDetail> {
     popularity: typeof res.popularity === 'number' ? res.popularity : null,
   }
 }
-
-
