@@ -72,9 +72,6 @@ importers:
       tailwindcss:
         specifier: ^4.1.14
         version: 4.1.14
-      tsc-alias:
-        specifier: ^1.8.16
-        version: 1.8.16
       turbo:
         specifier: ^2.5.8
         version: 2.5.8
