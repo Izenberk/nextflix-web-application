@@ -1,4 +1,3 @@
-// api/src/movies/movies.service.ts
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -29,16 +28,10 @@ import {
 } from '@/domain/movies/get-now-playing.usecase';
 import type { MovieSummary } from '@/domain/movies/movie.entity';
 
-// Narrow the options we actually accept at this layer.
-// Keeps TMDB details from leaking and lets you evolve later.
-export type ListOpts = Readonly<{
-  language?: string;
-  region?: string;
-}>;
-
+export type ListOpts = Readonly<{ language?: string; region?: string }>;
 export type VideoOpts = Readonly<{
   language?: string;
-  includeVideoLanguage?: string; // e.g. 'en,null' to allow fallback
+  includeVideoLanguage?: string;
 }>;
 
 @Injectable()
@@ -49,7 +42,6 @@ export class MoviesService
     GetUpcomingMoviesPort,
     GetNowPlayingMoviesPort
 {
-  // Prefer readonly fields; avoids accidental reassignment
   private readonly popularUC = new GetPopularMovies(this);
   private readonly topRatedUC = new GetTopRatedMovies(this);
   private readonly upcomingUC = new GetUpcomingMovies(this);
@@ -57,25 +49,22 @@ export class MoviesService
 
   constructor(private readonly cfg: ConfigService) {}
 
-  // Use getOrThrow for fail-fast, typed key access
-  private get tmdbApiKey(): string {
-    return this.cfg.getOrThrow<string>('TMDB_API_KEY');
+  /** Fail fast if v4 token not present */
+  private get tmdbTokenV4(): string {
+    const t = this.cfg.get<string>('TMDB_ACCESS_TOKEN_V4');
+    if (!t) throw new Error('TMDB_ACCESS_TOKEN_V4 is not set');
+    return t;
   }
 
-  // --- Internal helpers -----------------------------------------------------
-
-  /** Adapts our public ListOpts -> TMDB client opts (type safe). */
   private toTmdbListOpts(opts?: ListOpts): TmdbListOpts | undefined {
     if (!opts) return undefined;
     const { language, region } = opts;
-    // Return only defined keys to avoid sending undefined in query
     return {
       ...(language ? { language } : {}),
       ...(region ? { region } : {}),
     };
   }
 
-  /** Defensive: ensure positive integer pages (service-level contract). */
   private sanitizePage(page?: number): number {
     if (!Number.isFinite(page as number)) return 1;
     const p = Math.trunc(page as number);
@@ -83,85 +72,66 @@ export class MoviesService
   }
 
   // --- Popular --------------------------------------------------------------
-
-  async fetch(page = 1, opts?: ListOpts): Promise<MovieSummary[]> {
+  async fetchPopular(page = 1, opts?: ListOpts): Promise<MovieSummary[]> {
+    void this.tmdbTokenV4; // trigger presence check
     const safePage = this.sanitizePage(page);
-    const payload = await getPopularMovies(
-      this.tmdbApiKey,
-      safePage,
-      this.toTmdbListOpts(opts),
-    );
+    const payload = await getPopularMovies(safePage, this.toTmdbListOpts(opts));
     return mapToMovieSummaries(payload);
   }
-
   getPopular(page = 1, opts?: ListOpts) {
     return this.popularUC.execute(this.sanitizePage(page), opts);
   }
 
   // --- Top Rated ------------------------------------------------------------
-
   async fetchTopRated(page = 1, opts?: ListOpts): Promise<MovieSummary[]> {
+    void this.tmdbTokenV4;
     const safePage = this.sanitizePage(page);
     const payload = await getTopRatedMovies(
-      this.tmdbApiKey,
       safePage,
       this.toTmdbListOpts(opts),
     );
     return mapToMovieSummaries(payload);
   }
-
   getTopRated(page = 1, opts?: ListOpts) {
     return this.topRatedUC.execute(this.sanitizePage(page), opts);
   }
 
   // --- Upcoming -------------------------------------------------------------
-
   async fetchUpcoming(page = 1, opts?: ListOpts): Promise<MovieSummary[]> {
+    void this.tmdbTokenV4;
     const safePage = this.sanitizePage(page);
     const payload = await getUpcomingMovies(
-      this.tmdbApiKey,
       safePage,
       this.toTmdbListOpts(opts),
     );
     return mapToMovieSummaries(payload);
   }
-
   getUpcoming(page = 1, opts?: ListOpts) {
     return this.upcomingUC.execute(this.sanitizePage(page), opts);
   }
 
   // --- Now Playing ----------------------------------------------------------
-
   async fetchNowPlaying(page = 1, opts?: ListOpts): Promise<MovieSummary[]> {
+    void this.tmdbTokenV4;
     const safePage = this.sanitizePage(page);
     const payload = await getNowPlayingMovies(
-      this.tmdbApiKey,
       safePage,
       this.toTmdbListOpts(opts),
     );
     return mapToMovieSummaries(payload);
   }
-
   getNowPlaying(page = 1, opts?: ListOpts) {
     return this.nowPlayingUC.execute(this.sanitizePage(page), opts);
   }
 
-  // --- Videos (trailers/teasers) -------------------------------------------
-
-  /**
-   * Fetches and returns videos sorted by quality preference:
-   * YouTube > Vimeo, Trailer > Teaser > others, Official > not.
-   * Returns an array already sorted best-first for easy FE consumption.
-   */
+  // --- Videos ---------------------------------------------------------------
   async fetchVideos(movieId: number, opts?: VideoOpts) {
-    // No implicit coercion: require a valid numeric id
+    void this.tmdbTokenV4;
     if (!Number.isFinite(movieId) || movieId <= 0) {
       throw new TypeError('movieId must be a positive integer');
     }
-    const payload = await getMovieVideos(this.tmdbApiKey, movieId, opts);
+    const payload = await getMovieVideos(movieId, opts);
     const list = payload?.results ?? [];
-
-    // Pure, typed sorting (no mutation of inputs)
     return [...list]
       .map((v) => ({
         v,
@@ -173,8 +143,6 @@ export class MoviesService
       .sort((a, b) => b.score - a.score)
       .map((x) => x.v);
   }
-
-  /** Public façade for controller/use cases. */
   getVideos(movieId: number, opts?: VideoOpts) {
     return this.fetchVideos(movieId, opts);
   }

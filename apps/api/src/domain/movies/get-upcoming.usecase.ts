@@ -1,14 +1,13 @@
 import type { MovieSummary } from './movie.entity';
+export type ListOpts = { language?: string; region?: string };
 
 export interface GetUpcomingMoviesPort {
-  fetch(
-    page?: number,
-    opts?: { language?: string; region?: string },
-  ): Promise<MovieSummary[]>;
+  fetchUpcoming(page?: number, opts?: ListOpts): Promise<MovieSummary[]>;
 }
+
 export class GetUpcomingMovies {
   constructor(private readonly port: GetUpcomingMoviesPort) {}
-  execute(page = 1, opts?: { language?: string; region?: string }) {
-    return this.port.fetch(page, opts);
+  execute(page = 1, opts?: ListOpts) {
+    return this.port.fetchUpcoming(page, opts);
   }
 }

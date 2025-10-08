@@ -1,14 +1,14 @@
 import type { MovieSummary } from './movie.entity';
 
+export type ListOpts = { language?: string; region?: string };
+
 export interface GetPopularMoviesPort {
-  fetch(
-    page?: number,
-    opts?: { language?: string; region?: string },
-  ): Promise<MovieSummary[]>;
+  fetchPopular(page?: number, opts?: ListOpts): Promise<MovieSummary[]>;
 }
+
 export class GetPopularMovies {
   constructor(private readonly port: GetPopularMoviesPort) {}
-  execute(page = 1, opts?: { language?: string; region?: string }) {
-    return this.port.fetch(page, opts);
+  execute(page = 1, opts?: ListOpts) {
+    return this.port.fetchPopular(page, opts);
   }
 }

@@ -1,3 +1,4 @@
+// apps/api/src/data/tmdb/tmdb.client.ts
 import axios from 'axios';
 import type { TmdbPaged, TmdbMovieRaw } from './tmdb.types';
 
@@ -17,100 +18,73 @@ export type TmdbVideo = {
   published_at?: string;
 };
 
-export async function getPopularMovies(
-  apiKey: string,
-  page = 1,
-  opts?: ListOpts,
-) {
+function authHeaders() {
+  const token = process.env.TMDB_ACCESS_TOKEN_V4;
+  if (!token) throw new Error('TMDB_ACCESS_TOKEN_V4 is not set');
+  return {
+    accept: 'application/json',
+    Authorization: `Bearer ${token}`,
+  };
+}
+
+export async function getPopularMovies(page = 1, opts?: ListOpts) {
   const { language = 'en-US', region } = opts ?? {};
   const res = await axios.get<TmdbPaged<TmdbMovieRaw>>(
     `${BASE_URL}/movie/popular`,
     {
-      params: {
-        api_key: apiKey,
-        page,
-        language,
-        ...(region ? { region } : {}),
-      },
+      headers: authHeaders(),
+      params: { page, language, ...(region ? { region } : {}) },
     },
   );
   return res.data;
 }
 
-export async function getTopRatedMovies(
-  apiKey: string,
-  page = 1,
-  opts?: ListOpts,
-) {
+export async function getTopRatedMovies(page = 1, opts?: ListOpts) {
   const { language = 'en-US', region } = opts ?? {};
   const res = await axios.get<TmdbPaged<TmdbMovieRaw>>(
     `${BASE_URL}/movie/top_rated`,
     {
-      params: {
-        api_key: apiKey,
-        page,
-        language,
-        ...(region ? { region } : {}),
-      },
+      headers: authHeaders(),
+      params: { page, language, ...(region ? { region } : {}) },
     },
   );
   return res.data;
 }
 
-export async function getUpcomingMovies(
-  apiKey: string,
-  page = 1,
-  opts?: ListOpts,
-) {
+export async function getUpcomingMovies(page = 1, opts?: ListOpts) {
   const { language = 'en-US', region } = opts ?? {};
   const res = await axios.get<TmdbPaged<TmdbMovieRaw>>(
     `${BASE_URL}/movie/upcoming`,
     {
-      params: {
-        api_key: apiKey,
-        page,
-        language,
-        ...(region ? { region } : {}),
-      },
+      headers: authHeaders(),
+      params: { page, language, ...(region ? { region } : {}) },
     },
   );
   return res.data;
 }
 
-export async function getNowPlayingMovies(
-  apiKey: string,
-  page = 1,
-  opts?: ListOpts,
-) {
+export async function getNowPlayingMovies(page = 1, opts?: ListOpts) {
   const { language = 'en-US', region } = opts ?? {};
   const res = await axios.get<TmdbPaged<TmdbMovieRaw>>(
     `${BASE_URL}/movie/now_playing`,
     {
-      params: {
-        api_key: apiKey,
-        page,
-        language,
-        ...(region ? { region } : {}),
-      },
+      headers: authHeaders(),
+      params: { page, language, ...(region ? { region } : {}) },
     },
   );
   return res.data;
 }
 
 export async function getMovieVideos(
-  apiKey: string,
   movieId: number,
-  opts?: { language?: string; includeVideoLanguage?: string }, // e.g. 'en,null'
+  opts?: { language?: string; includeVideoLanguage?: string },
 ) {
   const { language = 'en-US', includeVideoLanguage = 'en,null' } = opts ?? {};
   const res = await axios.get<{ id: number; results: TmdbVideo[] }>(
     `${BASE_URL}/movie/${movieId}/videos`,
     {
-      params: {
-        api_key: apiKey,
-        language,
-        include_video_language: includeVideoLanguage,
-      },
+      headers: authHeaders(),
+      params: { language, include_video_language: includeVideoLanguage },
     },
   );
   return res.data;
