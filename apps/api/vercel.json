@@ -1,6 +1,12 @@
 {
   "version": 2,
-
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm dlx turbo run build --filter=@nextflix/api...",
+  "functions": {
+    "dist/main.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "builds": [
     {
       "src": "dist/main.js",

@@ -1,135 +1,85 @@
-# Turborepo starter
+# Nextflix Monorepo
 
-This Turborepo starter is maintained by the Turborepo core team.
+A Turbo-powered monorepo that contains the **Nextflix** frontend (`apps/web`, built with Next.js 15) and the accompanying **NestJS** API (`apps/api`). The apps share tooling via pnpm workspaces and Turborepo pipelines.
 
-## Using this example
+## Repository layout
 
-Run the following command:
+| Path | Description |
+| --- | --- |
+| `apps/web` | Public Next.js application that renders the Nextflix UI. |
+| `apps/api` | NestJS server that proxies requests to the TMDB API and exposes REST endpoints consumed by the frontend. |
+| `packages/*` | Shared TypeScript, ESLint, and UI utilities. |
 
-```sh
-npx create-turbo@latest
-```
+## Getting started locally
 
-## What's inside?
+1. Install dependencies once at the repository root:
 
-This Turborepo includes the following packages/apps:
+   ```bash
+   pnpm install
+   ```
 
-### Apps and Packages
+2. Start both applications in watch mode:
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+   ```bash
+   pnpm dev
+   ```
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+   The web app runs on [http://localhost:3001](http://localhost:3001) and expects the API to be reachable at `http://localhost:3000/api/v1` by default.
 
-### Utilities
+### Environment variables
 
-This Turborepo has some additional tools already setup for you:
+Create `.env` files next to each app when running locally or deploying:
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+#### `apps/api`
 
-### Build
+| Variable | Required | Default | Notes |
+| --- | --- | --- | --- |
+| `TMDB_ACCESS_TOKEN_V4` | ✅ | — | TMDB API v4 access token used when requesting movie data. |
+| `PORT` | ⛔ | `3000` | Only used for local development (ignored on Vercel). |
+| `GLOBAL_PREFIX` | ⛔ | `api` | API prefix that appears in final routes (`/api/v1/...`). |
+| `API_VERSION` | ⛔ | `1` | API version number that becomes the second segment of the path. |
 
-To build all apps and packages, run the following command:
+#### `apps/web`
 
-```
-cd my-turborepo
+| Variable | Required | Default | Notes |
+| --- | --- | --- | --- |
+| `NEXT_PUBLIC_API_BASE_URL` | ⛔ | `http://localhost:3000` | Base origin for the API project. Set this to the deployed API URL on Vercel. |
+| `NEXT_PUBLIC_API_BASE_PATH` | ⛔ | `/api/v1` | Path segment that points to the API version. |
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+## Vercel deployment
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+Deploy the frontend and backend as **two separate Vercel projects**, each pointing to the same GitHub repository but with different root directories and build commands.
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+### Frontend (`apps/web`)
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+1. Create a new Vercel project and select this repository.
+2. In **Project Settings → General → Build & Development Settings** set:
+   - **Root Directory**: `.` (repository root)
+   - **Install Command**: `pnpm install --frozen-lockfile`
+   - **Build Command**: `pnpm dlx turbo run build --filter=@nextflix/web...`
+   - **Output Directory**: `apps/web/.next`
+3. Define the required environment variables in **Project Settings → Environment Variables** (at minimum `NEXT_PUBLIC_API_BASE_URL` pointing to the deployed API URL).
+4. Trigger a deployment. Vercel automatically runs `next start` on the generated build output.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+### Backend (`apps/api`)
 
-### Develop
+1. Create a second Vercel project that also references this repository.
+2. In **Project Settings → General → Build & Development Settings** set:
+   - **Root Directory**: `apps/api`
+   - **Framework Preset**: `Other`
+   - **Install Command**: `pnpm install --frozen-lockfile`
+   - **Build Command**: `pnpm dlx turbo run build --filter=@nextflix/api...`
+   - (No output directory is needed for serverless functions.)
+3. The provided `apps/api/vercel.json` routes every HTTP method to the compiled NestJS handler located at `dist/main.js` and pins the Node.js runtime to 20.x.
+4. Add your API secrets (`TMDB_ACCESS_TOKEN_V4`, optional overrides for `GLOBAL_PREFIX`/`API_VERSION`, etc.) in **Environment Variables**.
+5. Deploy. The API is exposed as a single serverless function whose base URL should be used to configure the frontend (`NEXT_PUBLIC_API_BASE_URL`).
 
-To develop all apps and packages, run the following command:
+### Linking the apps
 
-```
-cd my-turborepo
+After both projects deploy successfully:
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+1. Copy the API project’s production URL (for example, `https://nextflix-api.vercel.app`).
+2. In the frontend project settings, set `NEXT_PUBLIC_API_BASE_URL` to that URL (no trailing slash).
+3. Redeploy the frontend so it reads the new environment variable and proxies traffic to the serverless API.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+That’s it! Subsequent pushes to the repository will trigger coordinated builds for each project using the commands above.
