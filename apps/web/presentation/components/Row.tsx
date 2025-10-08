@@ -66,17 +66,20 @@ export default function Row({ title, items = [], onOpen }: Props) {
         onClick={() => handleScroll('left')}
         aria-label="Scroll left"
         disabled={atStart}
-        className="
+        className={`
           absolute left-0 top-1/2 -translate-y-1/2 z-10
           hidden md:flex h-40 w-10 items-center justify-center
-          bg-gradient-to-r from-white/30 to-transparent
-          opacity-0 group-hover:opacity-100 transition
-          disabled:opacity-30
+          transition
+          ${atStart
+            ? 'pointer-events-none opacity-0' // completely hide when at start
+            : 'bg-gradient-to-r from-white/30 to-transparent opacity-0 group-hover:opacity-100 hover:opacity-100'
+          }
           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60
-        "
+        `}
       >
         <ChevronLeft size={28} />
       </button>
+
 
       {/* Track (drag to scroll) */}
       <div className="relative overflow-hidden">
