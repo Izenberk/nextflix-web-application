@@ -65,7 +65,7 @@ export async function getMovieById(id: string | number): Promise<MovieDetail> {
     genres: Array.isArray(res.genres) ? res.genres : [],
     runtime: typeof res.runtime === 'number' ? res.runtime : null,
     releaseDate: res.releaseDate ?? null,
-    voteAverage: typeof res.voteAverage === 'number' ? res.voteAverage : null,
+    voteAverage: typeof res.voteAverage === 'number' ? res.voteAverage : 0,
     originalTitle: res.originalTitle ?? null,
     originalLanguage: res.originalLanguage ?? null,
     popularity: typeof res.popularity === 'number' ? res.popularity : null,

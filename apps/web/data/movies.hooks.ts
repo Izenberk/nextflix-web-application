@@ -1,7 +1,7 @@
 // apps/web/data/movies.hooks.ts
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import type { MovieSummary } from '@/domain/movies'
 import {
   fetchPopular,
@@ -14,45 +14,52 @@ import {
 } from './movies.repo'
 
 /** Shared query options */
-const base = { suspense: true, useErrorBoundary: true, staleTime: 60_000 as const }
+const base = {
+  staleTime: 60_000 as const,
+  gcTime: 5 * 60_000,       // optional: replaces cacheTime in v5
+  retry: 1,                 // optional: fail fast for UI
+  refetchOnWindowFocus: false as const,
+}
 
-/** Popular */
+/** Popular (suspense) */
 export const usePopularMovies = (page = 1) =>
-  useQuery<Paged<MovieSummary>>({
+  useSuspenseQuery<Paged<MovieSummary>>({
     queryKey: ['movies', 'popular', page],
     queryFn: () => fetchPopular(page),
     ...base,
   })
 
-/** Top Rated */
+/** Top Rated (suspense) */
 export const useTopRatedMovies = (page = 1) =>
-  useQuery<Paged<MovieSummary>>({
+  useSuspenseQuery<Paged<MovieSummary>>({
     queryKey: ['movies', 'top-rated', page],
     queryFn: () => fetchTopRated(page),
     ...base,
   })
 
-/** Now Playing */
+/** Now Playing (suspense) */
 export const useNowPlayingMovies = (page = 1) =>
-  useQuery<Paged<MovieSummary>>({
+  useSuspenseQuery<Paged<MovieSummary>>({
     queryKey: ['movies', 'now-playing', page],
     queryFn: () => fetchNowPlaying(page),
     ...base,
   })
 
-/** Upcoming */
+/** Upcoming (suspense) */
 export const useUpcomingMovies = (page = 1) =>
-  useQuery<Paged<MovieSummary>>({
+  useSuspenseQuery<Paged<MovieSummary>>({
     queryKey: ['movies', 'upcoming', page],
     queryFn: () => fetchUpcoming(page),
     ...base,
   })
 
-
-/** Hero trailer (best-effort YouTube pick with graceful fallback) */
+/**
+ * Hero trailer: keep non-suspense (optional resource).
+ * We guard with `enabled` so it won’t fire without an id.
+ */
 export const useMovieTrailer = (movieId?: number) =>
   useQuery<MovieVideo | null>({
-    queryKey: ['movies', 'videos', 'trailer', movieId],
+    queryKey: ['movies', 'videos', 'trailer', movieId ?? 'none'],
     enabled: !!movieId,
     queryFn: async () => {
       if (!movieId) return null
@@ -69,7 +76,7 @@ export const useMovieTrailer = (movieId?: number) =>
         null
       )
     },
-    suspense: true,
-    useErrorBoundary: true,
     staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    retry: 0,
   })
