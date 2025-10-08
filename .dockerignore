@@ -1,0 +1,11 @@
+# at repo root
+.git
+node_modules
+**/node_modules
+**/.next/cache
+**/.turbo
+**/dist
+.vscode
+.idea
+.DS_Store
+
