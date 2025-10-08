@@ -1,25 +1,30 @@
 // apps/api/api/index.ts
-import 'reflect-metadata';
-import serverlessHttp from 'serverless-http';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import express from 'express';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { AppModule } from '../src/app.module';
 import { ConfigService } from '@nestjs/config';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { VersioningType, ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-let cachedHandler: ReturnType<typeof serverlessHttp> | null = null;
+// single Express server reused across invocations
+const server = express();
+let isBootstrapped = false;
 
 async function bootstrap() {
-  const expressApp = express();
-  const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp), {
-    // keep logs minimal in serverless
-    logger: ['error', 'warn', 'log'],
+  const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
+    // disable Nest logger in serverless to reduce cold-start noise (optional)
+    logger: false,
   });
 
   const cfg = app.get(ConfigService);
-  const origin = cfg.get<string>('CORS_ORIGIN') ?? 'http://localhost:3001';
+
+  const origin =
+    cfg.get<string>('CORS_ORIGIN') ??
+    process.env.CORS_ORIGIN ??
+    'http://localhost:3001';
+
   const globalPrefix = cfg.get<string>('GLOBAL_PREFIX') ?? 'api';
   const apiVersion = cfg.get<string>('API_VERSION') ?? '1';
 
@@ -28,36 +33,39 @@ async function bootstrap() {
 
   // Prefix + versioning
   app.setGlobalPrefix(globalPrefix);
-  app.enableVersioning({ type: VersioningType.URI, defaultVersion: apiVersion });
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: apiVersion,
+  });
 
   // Validation
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
-  // Swagger (mounted at /docs). Note: no file writes in serverless
+  // Swagger (routes only; don't write files on Vercel)
   const openapi = new DocumentBuilder()
     .setTitle('Nextflix API')
     .setDescription('API documentation for Nextflix prototype')
     .setVersion(apiVersion)
-    .addServer('/', 'Serverless Base')
+    .addServer('/', 'Vercel')
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' })
     .build();
 
-  const doc = SwaggerModule.createDocument(app, openapi, { ignoreGlobalPrefix: false });
+  const doc = SwaggerModule.createDocument(app, openapi, {
+    ignoreGlobalPrefix: false,
+  });
   SwaggerModule.setup('docs', app, doc);
 
-  // IMPORTANT: serverless = init only; DO NOT listen()
+  // IMPORTANT: no app.listen() in serverless
   await app.init();
 
-  return serverlessHttp(expressApp);
+  isBootstrapped = true;
 }
 
-export default async function handler(req: any, res: any) {
-  try {
-    if (!cachedHandler) cachedHandler = await bootstrap();
-    return cachedHandler(req, res);
-  } catch (err) {
-    console.error('Serverless bootstrap error:', err);
-    res.statusCode = 500;
-    res.end('Internal Server Error');
+// Vercel entry point
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (!isBootstrapped) {
+    await bootstrap();
   }
+  // hand off to Express/Nest
+  server(req as any, res as any);
 }
