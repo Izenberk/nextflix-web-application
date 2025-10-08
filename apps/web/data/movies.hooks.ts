@@ -13,8 +13,8 @@ import {
   type MovieVideo,
 } from './movies.repo'
 
-/** Shared query options */
-const base = { suspense: true, useErrorBoundary: true, staleTime: 60_000 as const }
+/** Shared query options (v5: no `suspense` or `useErrorBoundary` here) */
+const base = { staleTime: 60_000 as const }
 
 /** Popular */
 export const usePopularMovies = (page = 1) =>
@@ -48,7 +48,6 @@ export const useUpcomingMovies = (page = 1) =>
     ...base,
   })
 
-
 /** Hero trailer (best-effort YouTube pick with graceful fallback) */
 export const useMovieTrailer = (movieId?: number) =>
   useQuery<MovieVideo | null>({
@@ -69,7 +68,5 @@ export const useMovieTrailer = (movieId?: number) =>
         null
       )
     },
-    suspense: true,
-    useErrorBoundary: true,
-    staleTime: 60_000,
+    ...base,
   })
