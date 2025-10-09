@@ -6,7 +6,7 @@
     }
   },
   "routes": [
-    { "src": "/(.*)", "dest": "apps/api/src/vercel.ts" }
+    { "src": "/api/(.*)", "dest": "apps/api/src/vercel.ts" }
   ],
   "installCommand": "pnpm install",
   "buildCommand": "pnpm -w install"
