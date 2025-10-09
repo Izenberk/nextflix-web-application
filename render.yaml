@@ -1,0 +1,20 @@
+# render.yaml (repo root)
+services:
+  - type: web
+    name: nextflix-api
+    env: docker
+    region: singapore   # pick nearest (e.g., singapore / frankfurt / ohio)
+    plan: free         # or starter/standard
+    healthCheckPath: /healthz   # if present; remove if you didn't add it
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GLOBAL_PREFIX
+        value: api
+      - key: API_VERSION
+        value: "1"
+      - key: CORS_ORIGIN
+        value: https://your-frontend-domain.tld
+      - key: TMDB_API_KEY
+        sync: false     # set in dashboard later
+    dockerfilePath: apps/api/Dockerfile
