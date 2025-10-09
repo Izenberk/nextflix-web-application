@@ -1,34 +1,40 @@
-# apps/api/Dockerfile
-
-# --- Build stage ---
-FROM node:20-alpine AS build
+# ---------- base ----------
+FROM node:20-alpine AS base
 WORKDIR /repo
 RUN corepack enable
 
-# Workspace manifests first (cache-friendly)
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+# ---------- builder ----------
+FROM base AS builder
 
-# App + shared packages (tsconfig/types/etc.)
-COPY apps/api ./apps/api
-COPY packages ./packages
+# 1) Copy manifests first (cache-friendly)
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY apps/api/package.json apps/api/package.json
+# If API imports any internal packages at runtime, also copy their manifests:
+# COPY packages/*/package.json packages/*/package.json
 
-# Install & build API
+# 2) Full workspace install (includes devDeps for build)
 RUN pnpm install --frozen-lockfile
-WORKDIR /repo/apps/api
-RUN pnpm build
 
-# --- Runtime stage ---
+# 3) Copy source and build API
+COPY . .
+RUN pnpm --filter @nextflix/api build
+
+# ---------- runner (standalone prod install) ----------
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=3000
-
-# Bring compiled code and exact deps from build stage
-COPY --from=build /repo/apps/api/dist ./dist
-COPY --from=build /repo/apps/api/package.json ./package.json
-# Optional: only if you actually have it
-# COPY --from=build /repo/apps/api/public ./public
-COPY --from=build /repo/apps/api/node_modules ./node_modules
-
 EXPOSE 3000
+
+# IMPORTANT: install the API as a STANDALONE package:
+# - DO NOT copy pnpm-workspace.yaml or the root package.json into the runner.
+# - This ensures pnpm installs deps from apps/api/package.json into /app/node_modules.
+COPY apps/api/package.json ./package.json
+RUN corepack enable && pnpm install --prod --no-frozen-lockfile
+
+# Bring compiled code + public assets
+COPY --from=builder /repo/apps/api/dist ./dist
+# Your code uses: join(process.cwd(), 'apps/api/public')
+# With WORKDIR=/app, that resolves to /app/apps/api/public, so copy there:
+COPY --from=builder /repo/apps/api/public ./apps/api/public
+
 CMD ["node", "dist/main.js"]
