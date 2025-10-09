@@ -3,6 +3,9 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Nextflix',
+  icons: {
+    icon: '/favicon.ico',
+  },
   description: 'Watch anything, anywhere — built by Korn.',
 }
 
